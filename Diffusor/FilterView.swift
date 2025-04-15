@@ -8,37 +8,36 @@
 import SwiftUI
 
 let sampleOriginal = URL(fileURLWithPath: "/Users/waldrumpus/Downloads/example_large.jpg")
+let sampleFiltered = URL(fileURLWithPath: "/Users/waldrumpus/Downloads/example_small.png")
 
 struct FilterView: View {
-    let originalImage: URL?
-    let filteredImage: URL?
+    @ObservedObject var item: Item
     
     var body: some View {
-        HStack {
-            if let originalImage {
-                AsyncImage(url: originalImage) { image in
-                    image
-                        .resizable()
-                        .scaledToFit()
-                } placeholder: {
-                    ProgressView()
+        GeometryReader { geometry in
+            HStack(alignment: .center) {
+                if let originalImage = item.originalImage {
+                    AsyncImage(url: originalImage) { image in
+                        image
+                            .resizable()
+                            .scaledToFit()
+                    } placeholder: {
+                        ProgressView()
+                    }
+                    .frame(width: geometry.size.width / 2, height: geometry.size.height)
                 }
-            }
-            
-            if let filteredImage {
-                AsyncImage(url: filteredImage) { image in
-                    image
-                        .resizable()
-                        .scaledToFit()
-                } placeholder: {
-                    ProgressView()
+                
+                if let filteredImage = item.filteredImage {
+                    AsyncImage(url: filteredImage) { image in
+                        image
+                            .resizable()
+                            .scaledToFit()
+                    } placeholder: {
+                        ProgressView()
+                    }
                 }
             }
         }
     }
 }
-
-#Preview {
-    FilterView(originalImage: sampleOriginal, filteredImage: sampleOriginal)
-        .frame(width: 400, height: 400)
-}
+	

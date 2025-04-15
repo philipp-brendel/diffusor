@@ -28,6 +28,6 @@ struct Thumbnail: View {
 }
 
 #Preview {
-    Thumbnail(originalImage: URL(fileURLWithPath: "/Users/waldrumpus/Downloads/example_large.jpg"), filteredImage: nil)
+    Thumbnail(originalImage: sampleOriginal, filteredImage: nil)
         .frame(width: 400, height: 200)
 }

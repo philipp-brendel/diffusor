@@ -15,7 +15,7 @@ struct ContentView: View {
             List {
                 ForEach(items) { item in
                     NavigationLink {
-                        FilterView(originalImage: item.originalImage, filteredImage: item.filteredImage)
+                        FilterView(item: item)
                     } label: {
                         Thumbnail(originalImage: item.originalImage, filteredImage: item.filteredImage)
                     }
@@ -36,7 +36,7 @@ struct ContentView: View {
     }
 
     private func addItem() {
-        let originalImage = URL(fileURLWithPath: "/Users/waldrumpus/Downloads/example_large.jpg")
+        let originalImage = sampleOriginal
         
         withAnimation {
             let newItem = Item(originalImage: originalImage, filteredImage: nil)
@@ -44,7 +44,7 @@ struct ContentView: View {
         }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            let filteredImage = URL(fileURLWithPath: "/Users/waldrumpus/Downloads/example_small.png")
+            let filteredImage = sampleFiltered
             
             self.items[self.items.count - 1].filteredImage = filteredImage
         }
