@@ -6,20 +6,18 @@
 //
 
 import SwiftUI
-import SwiftData
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
+    @State private var items: [Item] = []
 
     var body: some View {
         NavigationSplitView {
             List {
                 ForEach(items) { item in
                     NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
+                        FilterView(originalImage: item.originalImage, filteredImage: item.filteredImage)
                     } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
+                        Thumbnail(originalImage: item.originalImage, filteredImage: item.filteredImage)
                     }
                 }
                 .onDelete(perform: deleteItems)
@@ -38,22 +36,27 @@ struct ContentView: View {
     }
 
     private func addItem() {
+        let originalImage = URL(fileURLWithPath: "/Users/waldrumpus/Downloads/example_large.jpg")
+        
         withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
+            let newItem = Item(originalImage: originalImage, filteredImage: nil)
+            self.items.append(newItem)
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            let filteredImage = URL(fileURLWithPath: "/Users/waldrumpus/Downloads/example_small.png")
+            
+            self.items[self.items.count - 1].filteredImage = filteredImage
         }
     }
 
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
-            }
+            
         }
     }
 }
 
 #Preview {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
 }

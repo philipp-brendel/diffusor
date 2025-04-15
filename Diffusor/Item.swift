@@ -6,13 +6,15 @@
 //
 
 import Foundation
-import SwiftData
 
-@Model
-final class Item {
-    var timestamp: Date
+final class Item: ObservableObject, Identifiable {
+    let id = UUID()
+    let timestamp = Date()
+    @Published var originalImage: URL?
+    @Published var filteredImage: URL?
     
-    init(timestamp: Date) {
-        self.timestamp = timestamp
+    init(originalImage: URL?, filteredImage: URL?) {
+        self.originalImage = originalImage
+        self.filteredImage = filteredImage
     }
 }
