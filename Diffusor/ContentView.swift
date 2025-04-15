@@ -12,23 +12,27 @@ struct ContentView: View {
     @State private var isTargeted = false
     @State private var items: [Item] = []
     @State private var selectedItem: Item? = nil
-
+    @State private var isShowingFileImporter = false
+    
     var body: some View {
         NavigationSplitView {
             List(items, selection: $selectedItem) { item in
                 NavigationLink(value: item)	 {
-                    Thumbnail(item: item)
+                    FilterView(item: item)
+                        .frame(height: 64)
                 }
 //                .onDelete(perform: deleteItems)
             }
             .navigationSplitViewColumnWidth(min: 180, ideal: 200)
-//            .toolbar {
-//                ToolbarItem {
-//                    Button(action: addItem) {
-//                        Label("Add Item", systemImage: "plus")
-//                    }
-//                }
-//            }
+            .toolbar {
+                ToolbarItem {
+                    Button(action: {
+                        self.isShowingFileImporter = true
+                    }) {
+                        Label("Add Item", systemImage: "plus")
+                    }
+                }
+            }
         } detail: {
             if let selectedItem {
                 FilterView(item: selectedItem)
@@ -45,23 +49,34 @@ struct ContentView: View {
         .onDrop(of: [UTType.fileURL], isTargeted: $isTargeted) { providers in
             handleDrop(providers: providers)
         }
+        .fileImporter(
+            isPresented: $isShowingFileImporter,
+            allowedContentTypes: [.image],
+            allowsMultipleSelection: false
+        ) { result in
+            switch result {
+            case .success(let urls):
+                guard let url = urls.first else { return }
+                addItem(from: url)
+            case .failure(let error):
+                print("Error importing file: \(error)")
+            }
+        }
     }
 
-    private func addItem() {
-        let originalImage = sampleOriginal
+    private func addItem(from url: URL) {
+        let newItem = Item(originalImage: url, filteredImage: nil)
         
         withAnimation {
-            let newItem = Item(originalImage: originalImage, filteredImage: nil)
             self.items.append(newItem)
+            self.selectedItem = newItem
         }
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            let filteredImage = sampleFiltered
-            
-            self.items[self.items.count - 1].filteredImage = filteredImage
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            newItem.filteredImage = simulateImageProcessing(url)
         }
     }
-
+    
     private func deleteItems(offsets: IndexSet) {
         withAnimation {
             
@@ -75,28 +90,13 @@ struct ContentView: View {
                     provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier, options: nil) { (item, error) in
                         if let data = item as? Data,
                            let url = NSURL(absoluteURLWithDataRepresentation: data, relativeTo: nil) as URL? {
-                            let newItem = Item(originalImage: url, filteredImage: nil)
                             DispatchQueue.main.async {
-                                withAnimation {
-                                    self.items.append(newItem)
-                                    self.selectedItem = newItem
-                                }
-                            }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                                newItem.filteredImage = simulateImageProcessing(newItem.originalImage!)
+                                self.addItem(from: url)
                             }
                         } else if let url = item as? URL {
-                            let newItem = Item(originalImage: url, filteredImage: nil)
                             DispatchQueue.main.async {
-                                withAnimation {
-                                    self.items.append(newItem)
-                                    self.selectedItem = newItem
-                                }
+                                self.addItem(from: url)
                             }
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) {
-                                newItem.filteredImage = simulateImageProcessing(newItem.originalImage!)
-                            }
-
                         }
                     }
                     found = true
