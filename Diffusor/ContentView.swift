@@ -21,7 +21,6 @@ struct ContentView: View {
                     FilterView(item: item)
                         .frame(height: 64)
                 }
-//                .onDelete(perform: deleteItems)
             }
             .navigationSplitViewColumnWidth(min: 180, ideal: 200)
             .toolbar {

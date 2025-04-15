@@ -14,5 +14,11 @@ struct DiffusorApp: App {
         WindowGroup {
             ContentView()
         }
+        .commands {
+            CommandGroup(after: .newItem) {
+                Button("Open ...") {
+                }
+            }
+        }
     }
 }

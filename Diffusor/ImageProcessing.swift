@@ -16,9 +16,10 @@ func simulateImageProcessing(_ url: URL) -> URL? {
     }
 
     // Apply a grayscale filter
-    let filter = CIFilter(name: "CIPhotoEffectMono")
+    let filter = CIFilter(name: "CIPixellate")
     filter?.setValue(ciImage, forKey: kCIInputImageKey)
-
+    filter?.setValue(20.0, forKey: kCIInputScaleKey)
+    
     guard let outputImage = filter?.outputImage else { return nil }
 
     let rep = NSCIImageRep(ciImage: outputImage)
