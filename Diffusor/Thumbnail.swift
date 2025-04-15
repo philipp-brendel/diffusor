@@ -8,26 +8,32 @@
 import SwiftUI
 
 struct Thumbnail: View {
-    let originalImage: URL?
-    let filteredImage: URL?
+    @ObservedObject var item: Item
     
     var body: some View {
-        HStack {
-            if let originalImage {
-                AsyncImage(url: originalImage) { image in
-                    image.resizable()
-                        .scaledToFit()
-                } placeholder: {
-                    ProgressView()
+        GeometryReader { geometry in
+            HStack {
+                if let originalImage = item.originalImage {
+                    AsyncImage(url: originalImage) { image in
+                        image.resizable()
+                            .scaledToFit()
+                    } placeholder: {
+                        ProgressView()
+                    }
+                    .frame(width: geometry.size.width / 2)
                 }
-                .frame(width: 128, height: 64)
-                .background(Color.gray)
+                
+                if let filteredImage = item.filteredImage {
+                    AsyncImage(url: filteredImage) { image in
+                        image.resizable()
+                            .scaledToFit()
+                    } placeholder: {
+                        ProgressView()
+                    }
+                    .frame(width: geometry.size.width / 2)
+                }
             }
         }
+        .frame(height: 64)
     }
-}
-
-#Preview {
-    Thumbnail(originalImage: sampleOriginal, filteredImage: nil)
-        .frame(width: 400, height: 200)
 }

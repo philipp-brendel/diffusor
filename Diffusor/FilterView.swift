@@ -35,6 +35,9 @@ struct FilterView: View {
                     } placeholder: {
                         ProgressView()
                     }
+                } else {
+                    ProgressView()
+                        .frame(width: geometry.size.width / 2, height: geometry.size.height)
                 }
             }
         }

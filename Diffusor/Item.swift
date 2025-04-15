@@ -18,3 +18,15 @@ final class Item: ObservableObject, Identifiable {
         self.filteredImage = filteredImage
     }
 }
+
+extension Item: Equatable {
+    static func == (lhs: Item, rhs: Item) -> Bool {
+        lhs.id == rhs.id
+    }
+}
+
+extension Item: Hashable {
+    func hash(into hasher: inout Hasher) {
+        id.hash(into: &hasher)
+    }
+}
