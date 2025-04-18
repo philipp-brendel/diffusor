@@ -71,8 +71,8 @@ struct ContentView: View {
             self.selectedItem = newItem
         }
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            newItem.filteredImage = simulateImageProcessing(url)
+        DispatchQueue.main.async {
+            newItem.filteredImage = processTheFrigginImage(url)
         }
     }
     
@@ -104,6 +104,40 @@ struct ContentView: View {
             return found
         }
 }
+
+func processTheFrigginImage(_ url: URL) -> URL {
+    let original = NSImage(contentsOf: url)!
+    let (buffer, width, height) = imageToGrayscaleFloatBuffer(original)!
+    
+    ip_gaussian_smooth(4, width - 2, height - 2, buffer)
+    
+    let filtered = floatBufferToNSImage(buffer: buffer, width: Int(width), height: Int(height))!
+    
+    let destinationURL = url.deletingPathExtension().appendingPathExtension("pgm")
+    try! filtered.tiffRepresentation!.write(to: destinationURL)
+    return destinationURL
+}
+
+//func doSomething() {
+//    let width: Int32 = 64
+//    let height: Int32 = 64
+//    let p = ip_allocate_image(width, height)!
+//    for y in 0..<height {
+//        if let row = p[Int(y)] {
+//            for x in 0..<width {
+//                row[Int(x)] = 255 * (Float(x % 16) / 15.0)  // Repeats every 16 pixels
+//            }
+//        }
+//    }
+//    var fp = fopen("./ip_original.pgm", "wb")!
+//    ip_save_image(fp, width - 2, height - 2, p, "no comment", 1)
+//    fclose(fp)
+//    ip_gaussian_smooth(4, width - 2, height - 2, p)
+//    fp = fopen("./ip_filtered.pgm", "wb")!
+//    ip_save_image(fp, width - 2, height - 2, p, "no comment", 1)
+//    fclose(fp)
+//    ip_deallocate_image(width, height, p)
+//}
 
 #Preview {
     ContentView()
