@@ -14,6 +14,8 @@ struct ContentView: View {
     @State private var selectedItem: Item? = nil
     @State private var isShowingFileImporter = false
     
+    @State private var sigma: Float = 2
+    
     var body: some View {
         NavigationSplitView {
             List(items, selection: $selectedItem) { item in
@@ -71,8 +73,12 @@ struct ContentView: View {
             self.selectedItem = newItem
         }
         
-        DispatchQueue.main.async {
-            newItem.filteredImage = processTheFrigginImage(url)
+        DispatchQueue.global(qos: .background).async {
+            let filtered = processTheFrigginImage(url, sigma: self.sigma)
+            		
+            DispatchQueue.main.async {
+                newItem.filteredImage = filtered
+            }
         }
     }
     
@@ -105,39 +111,22 @@ struct ContentView: View {
         }
 }
 
-func processTheFrigginImage(_ url: URL) -> URL {
+func processTheFrigginImage(_ url: URL, sigma: Float) -> URL {
     let original = NSImage(contentsOf: url)!
     let (buffer, width, height) = imageToGrayscaleFloatBuffer(original)!
     
-    ip_gaussian_smooth(4, width - 2, height - 2, buffer)
+    ip_gaussian_smooth(0.5, width - 2, height - 2, buffer)
+    
+    for _ in 0...20 {
+        ip_ced(1.0, 4.0, 0.001, 0.2, width - 2, height - 2, buffer)
+    }
     
     let filtered = floatBufferToNSImage(buffer: buffer, width: Int(width), height: Int(height))!
     
-    let destinationURL = url.deletingPathExtension().appendingPathExtension("pgm")
+    let destinationURL = URL(fileURLWithPath: "/Users/waldrumpus/Downloads/temp_\(UUID()).tiff")
     try! filtered.tiffRepresentation!.write(to: destinationURL)
     return destinationURL
 }
-
-//func doSomething() {
-//    let width: Int32 = 64
-//    let height: Int32 = 64
-//    let p = ip_allocate_image(width, height)!
-//    for y in 0..<height {
-//        if let row = p[Int(y)] {
-//            for x in 0..<width {
-//                row[Int(x)] = 255 * (Float(x % 16) / 15.0)  // Repeats every 16 pixels
-//            }
-//        }
-//    }
-//    var fp = fopen("./ip_original.pgm", "wb")!
-//    ip_save_image(fp, width - 2, height - 2, p, "no comment", 1)
-//    fclose(fp)
-//    ip_gaussian_smooth(4, width - 2, height - 2, p)
-//    fp = fopen("./ip_filtered.pgm", "wb")!
-//    ip_save_image(fp, width - 2, height - 2, p, "no comment", 1)
-//    fclose(fp)
-//    ip_deallocate_image(width, height, p)
-//}
 
 #Preview {
     ContentView()

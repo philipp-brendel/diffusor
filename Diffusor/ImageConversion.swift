@@ -16,16 +16,23 @@ func imageToGrayscaleFloatBuffer(_ image: NSImage) -> (UnsafeMutablePointer<Unsa
     let height = Int32(bitmap.pixelsHigh)
     
     // Create float** buffer: allocate array of row pointers
-    let buffer = UnsafeMutablePointer<UnsafeMutablePointer<Float>?>.allocate(capacity: Int(height))
+    let buffer = UnsafeMutablePointer<UnsafeMutablePointer<Float>?>.allocate(capacity: Int(width))
     
-    for y in 0..<Int(height) {
-        let row = UnsafeMutablePointer<Float>.allocate(capacity: Int(width))
-        for x in 0..<Int(width) {
-            let color = bitmap.colorAt(x: x, y: y) ?? NSColor.black
-            let gray = Float(color.brightnessComponent)
-            row[x] = gray
+    for x in 0..<Int(width) {
+        let column = UnsafeMutablePointer<Float>.allocate(capacity: Int(height))
+        for y in 0..<Int(height) {
+            if let color = bitmap.colorAt(x: x, y: y)?.usingColorSpace(.deviceRGB) {
+                // Compute luminance manually
+                let r = Float(color.redComponent)
+                let g = Float(color.greenComponent)
+                let b = Float(color.blueComponent)
+                let gray = 255 * (0.299 * r + 0.587 * g + 0.114 * b)
+                column[y] = gray
+            } else {
+                column[y] = 0.0
+            }
         }
-        buffer[y] = row
+        buffer[x] = column
     }
 
     return (buffer, width, height)
@@ -45,9 +52,9 @@ func floatBufferToNSImage(buffer: UnsafeMutablePointer<UnsafeMutablePointer<Floa
     
     guard let data = bitmap?.bitmapData else { return nil }
 
-    for y in 0..<height {
-        for x in 0..<width {
-            let value = UInt8(clamping: Int(buffer[y]![x] * 255))
+    for x in 0..<width {
+        for y in 0..<height {
+            let value = UInt8(clamping: Int(buffer[x]![y]))
             data[y * width + x] = value
         }
     }
