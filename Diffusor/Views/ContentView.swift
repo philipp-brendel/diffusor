@@ -13,8 +13,9 @@ struct ContentView: View {
     @State private var items: [Item] = []
     @State private var selectedItem: Item? = nil
     @State private var isShowingFileImporter = false
+    @State private var selectedFilter: Filter?
     
-    @State private var sigma: Float = 2
+    private var filters: [Filter] = standardFilters()
     
     var body: some View {
         NavigationSplitView {
@@ -35,16 +36,32 @@ struct ContentView: View {
                 }
             }
         } detail: {
-            if let selectedItem {
-                FilterView(item: selectedItem)
-            } else {
-                VStack {
-                    Image(systemName: "photo")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 200)
-                    Text("Drop an image file here")
+            VStack {
+                Picker(selection: $selectedFilter, content: {
+                    ForEach(self.filters) { filter in
+                        Text(filter.name)
+                            .tag(filter)
+                    }
+                }, label: {
+                    Text("Filter")
+                })
+                .padding(8)
+                
+                Spacer()
+                
+                if let selectedItem {
+                    FilterView(item: selectedItem)
+                } else {
+                    VStack {
+                        Image(systemName: "photo")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 200)
+                        Text("Drop an image file here")
+                    }
                 }
+                
+                Spacer()
             }
         }
         .onDrop(of: [UTType.fileURL], isTargeted: $isTargeted) { providers in
@@ -63,9 +80,28 @@ struct ContentView: View {
                 print("Error importing file: \(error)")
             }
         }
+        .onAppear {
+            if !self.filters.isEmpty {
+                self.selectedFilter = self.filters[0]
+            }
+        }
+        .onChange(of: selectedFilter) { _, newFilter in
+            guard let selectedItem = selectedItem, let filter = newFilter, let originalImage = selectedItem.originalImage else { return }
+            
+            selectedItem.filteredImage = nil
+            
+            DispatchQueue.global(qos: .background).async {
+                let filtered = processTheFrigginImage(originalImage, filter)
+
+                DispatchQueue.main.async {
+                    selectedItem.filteredImage = filtered
+                }
+            }
+        }
     }
 
     private func addItem(from url: URL) {
+        guard let filter = self.selectedFilter else { return }
         let newItem = Item(originalImage: url, filteredImage: nil)
         
         withAnimation {
@@ -74,17 +110,11 @@ struct ContentView: View {
         }
         
         DispatchQueue.global(qos: .background).async {
-            let filtered = processTheFrigginImage(url, sigma: self.sigma)
+            let filtered = processTheFrigginImage(url, filter)
             		
             DispatchQueue.main.async {
                 newItem.filteredImage = filtered
             }
-        }
-    }
-    
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            
         }
     }
     
@@ -111,17 +141,13 @@ struct ContentView: View {
         }
 }
 
-func processTheFrigginImage(_ url: URL, sigma: Float) -> URL {
+func processTheFrigginImage(_ url: URL ,_ filter: Filter) -> URL {
     let original = NSImage(contentsOf: url)!
-    let (buffer, width, height) = imageToGrayscaleFloatBuffer(original)!
+    let image = imageToGrayscaleFloatBuffer(original)!
     
-    ip_gaussian_smooth(0.5, width - 2, height - 2, buffer)
-    
-    for _ in 0...20 {
-        ip_ced(1.0, 4.0, 0.001, 0.2, width - 2, height - 2, buffer)
-    }
-    
-    let filtered = floatBufferToNSImage(buffer: buffer, width: Int(width), height: Int(height))!
+    filter.apply(to: image)
+        
+    let filtered = floatBufferToNSImage(buffer: image.buffer, width: Int(image.width), height: Int(image.height))!
     
     let destinationURL = tempUrl()
     try! filtered.tiffRepresentation!.write(to: destinationURL)

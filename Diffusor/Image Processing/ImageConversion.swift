@@ -6,7 +6,9 @@
 //
 import AppKit
 
-func imageToGrayscaleFloatBuffer(_ image: NSImage) -> (UnsafeMutablePointer<UnsafeMutablePointer<Float>?>, Int32, Int32)? {
+typealias IpImage = (buffer: UnsafeMutablePointer<UnsafeMutablePointer<Float>?>, width: Int32, height: Int32)
+
+func imageToGrayscaleFloatBuffer(_ image: NSImage) -> IpImage? {
     guard let tiffData = image.tiffRepresentation,
           let bitmap = NSBitmapImageRep(data: tiffData) else {
         return nil
@@ -35,7 +37,7 @@ func imageToGrayscaleFloatBuffer(_ image: NSImage) -> (UnsafeMutablePointer<Unsa
         buffer[x] = column
     }
 
-    return (buffer, width, height)
+    return (buffer: buffer, width: width, height: height)
 }
 
 func floatBufferToNSImage(buffer: UnsafeMutablePointer<UnsafeMutablePointer<Float>?>, width: Int, height: Int) -> NSImage? {
