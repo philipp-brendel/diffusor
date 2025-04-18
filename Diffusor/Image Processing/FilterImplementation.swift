@@ -5,6 +5,8 @@
 //  Created by Philipp Brendel on 18.04.25.
 //
 
+import AppKit
+
 protocol FilterImplementation: Hashable {
     var id: String { get }
     var name: String { get }
@@ -15,6 +17,7 @@ func standardFilters() -> [Filter] {
     [
         Filter(filter: GaussianBlur(sigma: 1.0)),
         Filter(filter: CoherenceEnhancingDiffusion(iterationCount: 20)),
+        Filter(filter: EdgeEnhancingDiffusion(iterationCount: 20))
     ]
 }
 
@@ -54,9 +57,36 @@ struct CoherenceEnhancingDiffusion: FilterImplementation {
     func apply(to image: IpImage) {
         ip_gaussian_smooth(0.5, image.width - 2, image.height - 2, image.buffer)
         
-        for _ in 0...20 {
+        for _ in 0...self.iterationCount {
             ip_ced(1.0, 4.0, 0.001, 0.2, image.width - 2, image.height - 2, image.buffer)
         }
 
     }
+}
+
+struct EdgeEnhancingDiffusion: FilterImplementation {
+    var id: String { "eed" }
+    var name: String { "Edge Enhancing Diffusion" }
+    let iterationCount: Int
+    
+    func apply(to image: IpImage) {
+        ip_gaussian_smooth(0.5, image.width - 2, image.height - 2, image.buffer)
+        
+        for _ in 0...self.iterationCount {
+            ip_eed(3.0, 0.2, image.width - 2, image.height - 2, image.buffer)
+        }
+    }
+}
+
+func processImage(_ url: URL ,_ filter: Filter) -> URL {
+    let original = NSImage(contentsOf: url)!
+    let image = imageToGrayscaleFloatBuffer(original)!
+    
+    filter.apply(to: image)
+        
+    let filtered = floatBufferToNSImage(buffer: image.buffer, width: Int(image.width), height: Int(image.height))!
+    
+    let destinationURL = tempUrl()
+    try! filtered.tiffRepresentation!.write(to: destinationURL)
+    return destinationURL
 }

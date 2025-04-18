@@ -12,8 +12,8 @@ struct ContentView: View {
     @State private var isTargeted = false
     @State private var items: [Item] = []
     @State private var selectedItem: Item? = nil
-    @State private var isShowingFileImporter = false
     @State private var selectedFilter: Filter?
+    @State private var isProcessing = false
     
     private var filters: [Filter] = standardFilters()
     
@@ -26,15 +26,6 @@ struct ContentView: View {
                 }
             }
             .navigationSplitViewColumnWidth(min: 180, ideal: 200)
-            .toolbar {
-                ToolbarItem {
-                    Button(action: {
-                        self.isShowingFileImporter = true
-                    }) {
-                        Label("Add Item", systemImage: "plus")
-                    }
-                }
-            }
         } detail: {
             VStack {
                 Picker(selection: $selectedFilter, content: {
@@ -46,6 +37,7 @@ struct ContentView: View {
                     Text("Filter")
                 })
                 .padding(8)
+                .disabled(self.isProcessing)
                 
                 Spacer()
                 
@@ -65,20 +57,7 @@ struct ContentView: View {
             }
         }
         .onDrop(of: [UTType.fileURL], isTargeted: $isTargeted) { providers in
-            handleDrop(providers: providers)
-        }
-        .fileImporter(
-            isPresented: $isShowingFileImporter,
-            allowedContentTypes: [.image],
-            allowsMultipleSelection: false
-        ) { result in
-            switch result {
-            case .success(let urls):
-                guard let url = urls.first else { return }
-                addItem(from: url)
-            case .failure(let error):
-                print("Error importing file: \(error)")
-            }
+            !self.isProcessing && handleDrop(providers: providers)
         }
         .onAppear {
             if !self.filters.isEmpty {
@@ -89,12 +68,14 @@ struct ContentView: View {
             guard let selectedItem = selectedItem, let filter = newFilter, let originalImage = selectedItem.originalImage else { return }
             
             selectedItem.filteredImage = nil
+            self.isProcessing = true
             
             DispatchQueue.global(qos: .background).async {
-                let filtered = processTheFrigginImage(originalImage, filter)
+                let filtered = processImage(originalImage, filter)
 
                 DispatchQueue.main.async {
                     selectedItem.filteredImage = filtered
+                    self.isProcessing = false
                 }
             }
         }
@@ -109,11 +90,14 @@ struct ContentView: View {
             self.selectedItem = newItem
         }
         
+        self.isProcessing = true
+        
         DispatchQueue.global(qos: .background).async {
-            let filtered = processTheFrigginImage(url, filter)
+            let filtered = processImage(url, filter)
             		
             DispatchQueue.main.async {
                 newItem.filteredImage = filtered
+                self.isProcessing = false
             }
         }
     }
@@ -139,25 +123,6 @@ struct ContentView: View {
             }
             return found
         }
-}
-
-func processTheFrigginImage(_ url: URL ,_ filter: Filter) -> URL {
-    let original = NSImage(contentsOf: url)!
-    let image = imageToGrayscaleFloatBuffer(original)!
-    
-    filter.apply(to: image)
-        
-    let filtered = floatBufferToNSImage(buffer: image.buffer, width: Int(image.width), height: Int(image.height))!
-    
-    let destinationURL = tempUrl()
-    try! filtered.tiffRepresentation!.write(to: destinationURL)
-    return destinationURL
-}
-
-func tempUrl() -> URL {
-    let tempDir = FileManager.default.temporaryDirectory
-    let tempFileURL = tempDir.appendingPathComponent(UUID().uuidString).appendingPathExtension("tiff")
-    return tempFileURL
 }
 
 #Preview {
