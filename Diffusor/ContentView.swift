@@ -123,9 +123,15 @@ func processTheFrigginImage(_ url: URL, sigma: Float) -> URL {
     
     let filtered = floatBufferToNSImage(buffer: buffer, width: Int(width), height: Int(height))!
     
-    let destinationURL = URL(fileURLWithPath: "/Users/waldrumpus/Downloads/temp_\(UUID()).tiff")
+    let destinationURL = tempUrl()
     try! filtered.tiffRepresentation!.write(to: destinationURL)
     return destinationURL
+}
+
+func tempUrl() -> URL {
+    let tempDir = FileManager.default.temporaryDirectory
+    let tempFileURL = tempDir.appendingPathComponent(UUID().uuidString).appendingPathExtension("tiff")
+    return tempFileURL
 }
 
 #Preview {

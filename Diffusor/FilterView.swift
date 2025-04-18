@@ -7,9 +7,6 @@
 
 import SwiftUI
 
-let sampleOriginal = URL(fileURLWithPath: "/Users/waldrumpus/Downloads/example_large.jpg")
-let sampleFiltered = URL(fileURLWithPath: "/Users/waldrumpus/Downloads/example_small.png")
-
 struct FilterView: View {
     @ObservedObject var item: Item
     
