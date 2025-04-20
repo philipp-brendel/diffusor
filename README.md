@@ -13,6 +13,11 @@ Diffusor provides a few filters that employ algorithms based on the work
 of [Joachim Weickert](https://www.mia.uni-saarland.de/weickert/index.shtml),
 specifically *edge enhancing diffusion* and *coherence enhancing diffusion*.
 
+This code is a modernized version of my previous 
+[toy project of the same name](https://github.com/brend/Diffusor/)
+using SwiftUI and adds niceties such as non-blocking computation so the app
+stays responsive while images are being processed, as well as an image history.
+
 ## Usage
 
 Compile the application using Xcode. 
