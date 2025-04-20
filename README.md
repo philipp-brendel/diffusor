@@ -1,4 +1,4 @@
-# Diffusor
+<h1><img src="Assets/icon_32x32@2x.png" alt="Diffusor logo"> Diffusor</h1>
 
 Explore various image processing filters with this simple macOS app.
 
