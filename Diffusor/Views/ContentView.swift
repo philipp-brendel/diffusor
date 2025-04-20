@@ -21,7 +21,7 @@ struct ContentView: View {
         NavigationSplitView {
             List(items, selection: $selectedItem) { item in
                 NavigationLink(value: item)	 {
-                    FilterView(item: item)
+                    FilterView(item: item, aspectRatio: .fill)
                         .frame(height: 64)
                 }
             }
@@ -42,7 +42,7 @@ struct ContentView: View {
                 Spacer()
                 
                 if let selectedItem {
-                    FilterView(item: selectedItem)
+                    FilterView(item: selectedItem, aspectRatio: .fit)
                 } else {
                     VStack {
                         Image(systemName: "photo")
