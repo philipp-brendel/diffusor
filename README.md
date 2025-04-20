@@ -7,6 +7,8 @@ Explore various image processing filters with this simple macOS app.
 Image processing is the process of filtering images using algorithms to
 improve their quality, determine their features, or create art.
 
+<img src="Assets/Diffusor.png">
+
 Diffusor provides a few filters that employ algorithms based on the work
 of [Joachim Weickert](https://www.mia.uni-saarland.de/weickert/index.shtml),
 specifically *edge enhancing diffusion* and *coherence enhancing diffusion*.
