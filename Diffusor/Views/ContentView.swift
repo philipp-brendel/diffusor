@@ -56,6 +56,7 @@ struct ContentView: View {
                 Spacer()
             }
         }
+        .navigationTitle("􀩅 Diffusor ‒ Image Filter Experimentation")
         .onDrop(of: [UTType.fileURL], isTargeted: $isTargeted) { providers in
             !self.isProcessing && handleDrop(providers: providers)
         }
