@@ -23,6 +23,7 @@ struct ContentView: View {
                 NavigationLink(value: item)	 {
                     FilterView(item: item, aspectRatio: .fill)
                         .frame(height: 64)
+                        .padding()
                 }
             }
             .navigationSplitViewColumnWidth(min: 180, ideal: 200)
